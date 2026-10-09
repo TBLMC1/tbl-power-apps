@@ -1,0 +1,246 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  Daily_Report_Home:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+    Children:
+      - Logo_Back_Daily_Report_Home:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(208, 81, 5, 1)
+            Height: =161
+            Width: =640
+      - Company_Logo_Daily_Report_Home:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =144
+            Image: ='TBL Logo'
+            OnSelect: =Navigate(Home_Page_Foreman)
+            Width: =640
+            Y: =8
+      - cmbProject:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            ChevronBackground: =RGBA(56, 96, 178, 1)
+            ChevronFill: =RGBA(255, 255, 255, 1)
+            ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            ChevronHoverFill: =RGBA(255, 255, 255, 1)
+            DisplayFields: =["Title"]
+            Font: =Font.'Open Sans'
+            HoverFill: =RGBA(186, 202, 226, 1)
+            IsSearchable: =false
+            Items: ='Procore Projects'
+            PressedColor: =RGBA(255, 255, 255, 1)
+            PressedFill: =RGBA(0, 18, 107, 1)
+            SearchFields: =["ComplianceAssetId"]
+            SelectMultiple: =false
+            SelectionColor: =RGBA(255, 255, 255, 1)
+            SelectionFill: =RGBA(56, 96, 178, 1)
+            Width: =560
+            X: =40
+            Y: =189
+      - dpLogDate:
+          Control: Classic/DatePicker@2.6.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            IconBackground: =RGBA(56, 96, 178, 1)
+            IconFill: =RGBA(255, 255, 255, 1)
+            Width: =428
+            X: =172
+            Y: =395
+      - Label3:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: ="Date:"
+            Width: =132
+            X: =40
+            Y: =395
+      - txtNumWorkers:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: =""
+            Font: =Font.'Open Sans'
+            Format: =TextFormat.Number
+            HintText: ="Number of workers"
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Width: =428
+            X: =172
+            Y: =493
+      - Label3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: ="# Workers:"
+            Width: =132
+            X: =40
+            Y: =493
+      - txtNumHours:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: =""
+            Font: =Font.'Open Sans'
+            Format: =TextFormat.Number
+            HintText: ="Hours worked"
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Width: =428
+            X: =172
+            Y: =591
+      - Label3_2:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: |-
+              ="Hours: "
+            Width: =132
+            X: =40
+            Y: =591
+      - txtNotes_Daily_Report:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: =""
+            Font: =Font.'Open Sans'
+            Height: =168
+            HintText: ="Notes (optional)"
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Mode: =TextMode.MultiLine
+            Width: =428
+            X: =172
+            Y: =686
+      - Label3_3:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =168
+            Text: |-
+              ="Notes: "
+            Width: =132
+            X: =40
+            Y: =686
+      - AddMediaButton1:
+          Control: AddMedia@2.2.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =51
+            OnChange: |-
+              =Collect(colAttachments, {FileName: "Photo_" & Text(Now(), "yyyymmddhhmmss") & ".jpg", Photo: Self.Media})
+            Size: =25
+            Width: =428
+            X: =172
+            Y: =875
+      - galAttachments:
+          Control: Gallery@2.15.0
+          Variant: Horizontal
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =78
+            Items: =colAttachments
+            TemplateSize: =317
+            Width: =322
+            X: =172
+            Y: =947
+          Children:
+            - Image1:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Height: =68
+                  Image: =ThisItem.Photo
+                  OnSelect: =Select(Parent)
+                  Width: =317
+            - Icon1:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(0, 18, 107, 1)
+                  Icon: =Icon.Trash
+                  OnSelect: =Remove(colAttachments, ThisItem)
+                  X: =253
+                  Y: =4
+      - btnSubmitManpower:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |-
+              =Set(varSubmitResult, 
+                  Patch(
+                      'Procore Manpower',
+                      Defaults('Procore Manpower'),
+                      {
+                          Title: cmbProject.Selected.Title,
+                          ProjectID: cmbProject.Selected.ProjectID,
+                          LogDate: dpLogDate.SelectedDate,
+                          NumWorkers: Value(txtNumWorkers.Text),
+                          NumHours: Value(txtNumHours.Text),
+                          Notes: txtNotes_Daily_Report.Text
+                      }
+                  )
+              );
+              ForAll(
+                  colAttachments As att,
+                  UploadManpowerAttachments.Run(
+                      Text(varSubmitResult.ID),
+                      {contentBytes: att.Photo, name: att.FileName}
+                  )
+              );
+              Clear(colAttachments);
+              Reset(cmbProject);
+              Reset(txtNumWorkers);
+              Reset(txtNumHours);
+              Reset(txtNotes_Daily_Report);
+              Reset(AddMediaButton1);
+              Notify("Manpower log submitted!", NotificationType.Success)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Submit"
+            X: =180
+            Y: =1038
+      - cmbCompany:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            ChevronBackground: =RGBA(56, 96, 178, 1)
+            ChevronFill: =RGBA(255, 255, 255, 1)
+            ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            ChevronHoverFill: =RGBA(255, 255, 255, 1)
+            DefaultSelectedItems: =["TBL Mission Critical, LLC"]
+            DisplayFields: =["Value"]
+            Font: =Font.'Open Sans'
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Items: =["TBL Mission Critical, LLC"]
+            PressedColor: =RGBA(255, 255, 255, 1)
+            PressedFill: =RGBA(0, 18, 107, 1)
+            SearchFields: =["Value"]
+            SelectionColor: =RGBA(255, 255, 255, 1)
+            SelectionFill: =RGBA(56, 96, 178, 1)
+            X: =25
+            Y: =292

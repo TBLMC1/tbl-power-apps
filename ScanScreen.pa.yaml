@@ -1,0 +1,406 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ScanScreen:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnHidden: |-
+        =If(
+            !IsEmpty(colSignIns),
+            SaveData(colSignIns, "cachedSignIns")
+        )
+      OnVisible: |-
+        =Set(varScanProcessing, false);
+        Set(varScanError, "");
+        Set(varScanResult, Blank());
+        Set(varCurrentScan, "");
+        Set(varOfflineName, "");
+        Set(varOfflineID, "");
+        Set(varScanCount, 0);
+        Set(varTimerProcessing, false);
+        ClearCollect(colScanQueue, {Value: "", QueueTime: Now()});
+        Clear(colScanQueue)
+    Children:
+      - Label5:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: =varSelectedCustomer & " - " & varSelectedClass
+            X: =40
+            Y: =40
+      - galScannedWorkers:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Items: =Filter(colSignIns, SessionID = varCurrentSessionID)
+            TemplateSize: =171
+            Y: =297
+          Children:
+            - Image2:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Height: =72
+                  OnSelect: =Select(Parent)
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Width: =72
+                  X: =16
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Title1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =46
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.QRValue
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =517
+                  X: =100
+                  Y: =14
+            - Subtitle1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =51
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =Text(ThisItem.ScanTime, "hh:mm AM/PM")
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title1.Width
+                  X: =Title1.X
+                  Y: =Title1.Y + Title1.Height
+            - NextArrow1:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  AccessibleLabel: =Self.Tooltip
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                  DisabledColor: =RGBA(119, 119, 119, 1)
+                  Height: =50
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  Tooltip: ="View item details"
+                  Width: =50
+                  X: =Parent.TemplateWidth - Self.Width - 12
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Separator1:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.TemplateHeight - Separator1.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+      - Button10:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(ReviewScreen, ScreenTransition.Fade)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Done Scanning"
+            Width: =247
+            X: =390
+            Y: =954
+      - Button10_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(SelectProjectScreen, ScreenTransition.Fade)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Back"
+            Width: =247
+            Y: =954
+      - BarcodeScanner1:
+          Control: BarcodeReader@1.0.25
+          Properties:
+            OnScan: |-
+              =ForAll(
+                  BarcodeScanner1.Barcodes As scanned,
+                  If(
+                      IsEmpty(Filter(colScanQueue, Value = scanned.Value)),
+                      Collect(colScanQueue, {Value: scanned.Value, QueueTime: Now()})
+                  )
+              )
+            ScanningMode: ='BarcodeReader.ScanningMode'.ScanMultiple
+            Text: ="QR Reader"
+            X: =180
+            Y: =110
+      - Label9:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(100, 100, 100, 1)
+            Font: =Font.'Open Sans'
+            Height: =63
+            Italic: =true
+            Text: ="Verifying..."
+            Visible: =varScanProcessing
+            X: =40
+            Y: =233
+      - Label9_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(54, 176, 75, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =53
+            Text: ="✓ " & varScanResult.scanname
+            Visible: =varScanResult.scanstatus = "valid"
+            X: =40
+            Y: =180
+      - Timer1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =ColorFade(Self.BorderColor, 70%)
+            DisabledColor: =ColorFade(Self.Fill, 90%)
+            DisabledFill: =ColorFade(Self.Fill, 70%)
+            Duration: =4000
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Lighter
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnTimerEnd: |-
+              =If(!varTimerProcessing && !IsEmpty(colScanQueue),
+                  Set(varTimerProcessing, true);
+                  Set(varCurrentScan, First(colScanQueue).Value);
+                  Remove(colScanQueue, First(colScanQueue));
+                  Set(varScanError, "");
+
+                  If(Connection.Connected,
+                      // Online path - full verification
+                      Set(varScanResult, 'TBL-VerifyQRScan'.Run(varCurrentScan));
+
+                      If(varScanResult.scanstatus = "valid",
+                          If(
+                              // Already scanned and clocked out in this session
+                              !IsEmpty(
+                                  Filter(
+                                      colSignIns,
+                                      QRValue = varCurrentScan &&
+                                      Action = "Clock Out" &&
+                                      SessionID = varCurrentSessionID
+                                  )
+                              ) &&
+                              IsEmpty(
+                                  Filter(
+                                      colSignIns,
+                                      QRValue = varCurrentScan &&
+                                      Action = "Clock In" &&
+                                      SessionID = varCurrentSessionID &&
+                                      ScanTime > LookUp(
+                                          colSignIns,
+                                          QRValue = varCurrentScan &&
+                                          Action = "Clock Out" &&
+                                          SessionID = varCurrentSessionID,
+                                          ScanTime
+                                      )
+                                  )
+                              ),
+                              // New Clock In after previous Clock Out in same session
+                              Collect(colSignIns, {
+                                  QRValue: varCurrentScan,
+                                  EmployeeName: varScanResult.scanname,
+                                  QBTUserID: varScanResult.scanuserid,
+                                  Action: "Clock In",
+                                  ScanTime: Now(),
+                                  Customer: varSelectedCustomer,
+                                  Class: varSelectedClass,
+                                  Notes: "",
+                                  Location: Text(Location.Latitude) & ", " & Text(Location.Longitude),
+                                  OfflineScan: false,
+                                  SessionID: varCurrentSessionID
+                              }),
+
+                              // Check Daily Logins for open clock in
+                              If(
+                                  !IsBlank(
+                                      LookUp(
+                                          Filter('Daily Logins',
+                                              EmployeeName = varScanResult.scanname &&
+                                              WorkDate = Today()
+                                          ),
+                                          IsBlank(TimeOut)
+                                      )
+                                  ),
+                                  // Clock Out
+                                  Collect(colSignIns, {
+                                      QRValue: varCurrentScan,
+                                      EmployeeName: varScanResult.scanname,
+                                      QBTUserID: varScanResult.scanuserid,
+                                      Action: "Clock Out",
+                                      ScanTime: Now(),
+                                      Customer: varSelectedCustomer,
+                                      Class: varSelectedClass,
+                                      Notes: "",
+                                      Location: Text(Location.Latitude) & ", " & Text(Location.Longitude),
+                                      OfflineScan: false,
+                                      SessionID: varCurrentSessionID
+                                  }),
+                                  // Clock In
+                                  Collect(colSignIns, {
+                                      QRValue: varCurrentScan,
+                                      EmployeeName: varScanResult.scanname,
+                                      QBTUserID: varScanResult.scanuserid,
+                                      Action: "Clock In",
+                                      ScanTime: Now(),
+                                      Customer: varSelectedCustomer,
+                                      Class: varSelectedClass,
+                                      Notes: "",
+                                      Location: Text(Location.Latitude) & ", " & Text(Location.Longitude),
+                                      OfflineScan: false,
+                                      SessionID: varCurrentSessionID
+                                  })
+                              )
+                          ),
+                          Set(varScanError, "Invalid or revoked QR — scan not accepted")
+                      ),
+
+                      // Offline path
+                      If(
+                          Left(varCurrentScan, 4) = "TBL|" && Len(varCurrentScan) > 10,
+
+                          Set(varOfflineName, Mid(varCurrentScan, 5, Find("|", varCurrentScan, 5) - 5));
+                          Set(varOfflineID, Mid(
+                              varCurrentScan,
+                              Find("|", varCurrentScan, 5) + 1,
+                              Find("|", varCurrentScan, Find("|", varCurrentScan, 5) + 1) - Find("|", varCurrentScan, 5) - 1
+                          ));
+
+                          Set(varScanCount, CountRows(Filter(colSignIns, QRValue = varCurrentScan)));
+
+                          Set(
+                              varWasClockedIn,
+                              !IsBlank(LookUp(colEmployeeClockStatus, QBTUserID = varOfflineID)) &&
+                              LookUp(colEmployeeClockStatus, QBTUserID = varOfflineID).IsClockedIn
+                          );
+
+                          Set(
+                              varIsCurrentlyClockedIn,
+                              If(
+                                  Mod(varScanCount, 2) = 0,
+                                  varWasClockedIn,
+                                  !varWasClockedIn
+                              )
+                          );
+
+                          If(
+                              varIsCurrentlyClockedIn,
+                              Collect(colSignIns, {
+                                  QRValue: varCurrentScan,
+                                  EmployeeName: varOfflineName,
+                                  QBTUserID: varOfflineID,
+                                  Action: "Clock Out",
+                                  ScanTime: Now(),
+                                  Customer: varSelectedCustomer,
+                                  Class: varSelectedClass,
+                                  Notes: "",
+                                  Location: Text(Location.Latitude) & ", " & Text(Location.Longitude),
+                                  OfflineScan: true,
+                                  SessionID: varCurrentSessionID
+                              }),
+                              Collect(colSignIns, {
+                                  QRValue: varCurrentScan,
+                                  EmployeeName: varOfflineName,
+                                  QBTUserID: varOfflineID,
+                                  Action: "Clock In",
+                                  ScanTime: Now(),
+                                  Customer: varSelectedCustomer,
+                                  Class: varSelectedClass,
+                                  Notes: "",
+                                  Location: Text(Location.Latitude) & ", " & Text(Location.Longitude),
+                                  OfflineScan: true,
+                                  SessionID: varCurrentSessionID
+                              })
+                          );
+
+                          SaveData(colSignIns, "cachedSignIns"),
+
+                          Set(varScanError, "Invalid QR — cannot scan offline")
+                      )
+                  );
+
+                  Set(varTimerProcessing, false)
+              )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Repeat: =true
+            Visible: =false
+            X: =180
+            Y: =40
+      - TextInput1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: |-
+              ="Queue: " & CountRows(colScanQueue) & " | Processed: " & CountRows(Filter(colSignIns, SessionID = varCurrentSessionID)) & If(CountRows(colScanQueue) > 0, " | Please do not exit this screen", "")
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Size: =12
+            X: =40
+            Y: =203

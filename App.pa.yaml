@@ -1,0 +1,111 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+App:
+  Properties:
+    OnStart: |-
+      =// Load offline cache first if exists
+      LoadData(colSignIns, "cachedSignIns", true);
+      If(
+          !IsEmpty(colSignIns),
+          Notify("You have unsynced scans pending.", NotificationType.Warning)
+      );
+
+      // Generate new session ID for this app session
+      Set(varCurrentSessionID, Text(Now(), "yyyymmddHHmmss"));
+
+      // Initialize varSelectedCustomer and varSelectedClass with defaults
+      Set(varSelectedCustomer, "");
+      Set(varSelectedClass, "");
+
+      // Load cached session config
+      LoadData(colSessionConfig, "cachedSessionConfig", true);
+      If(
+          !IsEmpty(colSessionConfig),
+          Set(varSelectedCustomer, First(colSessionConfig).Customer);
+          Set(varSelectedClass, First(colSessionConfig).Class)
+      );
+
+      // Online/offline data loading
+      If(
+          Connection.Connected,
+          ClearCollect(
+              colCustomers,
+              ForAll(
+                  MatchAll(GetQBTJobcodes.Run().customers, """name"":""(?<DisplayName>[^""]+)"""),
+                  {DisplayName:DisplayName}
+              )
+          );
+          SaveData(colCustomers, "cachedCustomers");
+          ClearCollect(colCachedUsers, 'List of User Logins');
+          SaveData(colCachedUsers, "cachedUsers"),
+          LoadData(colCustomers, "cachedCustomers", true);
+          LoadData(colCachedUsers, "cachedUsers", true)
+      );
+
+      ClearCollect(colAttachments, {FileName: "init", Photo: SampleImage});
+      Clear(colAttachments);
+      ClearCollect(colSelectedWorkers, {QRValue: "", Action: "", ScanTime: Now()});
+      Clear(colSelectedWorkers);
+
+      // Initialize colDailyLoginsRefresh schema
+      ClearCollect(colDailyLoginsRefresh, {
+          EmployeeName: "",
+          QBTUserID: "",
+          WorkDate: Today(),
+          TimeIn: Now(),
+          TimeOut: Now()
+      });
+      Clear(colDailyLoginsRefresh);
+
+      // Initialize colSessionConfig if empty
+      If(
+          IsEmpty(colSessionConfig),
+          ClearCollect(colSessionConfig, {
+              Customer: "",
+              Class: ""
+          });
+          Clear(colSessionConfig)
+      );
+
+      // Only initialize colSignIns if no cached data was loaded
+      If(
+          IsEmpty(colSignIns),
+          ClearCollect(colSignIns, {
+              QRValue: "",
+              EmployeeName: "",
+              QBTUserID: "",
+              Action: "",
+              ScanTime: Now(),
+              Customer: "",
+              Class: "",
+              Notes: "",
+              Location: "",
+              OfflineScan: false,
+              SessionID: ""
+          });
+          Clear(colSignIns)
+      );
+
+      // Initialize empty dismissed collection with schema
+      ClearCollect(colDismissedAnnouncements, {ID: 0});
+      Remove(colDismissedAnnouncements, First(colDismissedAnnouncements));
+
+      // Then load from cache (if any saved)
+      LoadData(colDismissedAnnouncements, "cachedDismissed", true);
+
+      // Load active announcements
+      ClearCollect(
+          colAnnouncements,
+          Filter(
+              'Announcement Board',
+              Active.Value = "Yes",
+              IsBlank(ExpirationDate) || ExpirationDate >= Today()
+          )
+      );
+    Theme: =PowerAppsTheme

@@ -1,0 +1,29 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+EditorState:
+  ScreensOrder:
+    - Login Landing Page
+    - Home_Page_Foreman
+    - SelectProjectScreen
+    - ScanScreen
+    - ReviewScreen
+    - Daily_Report_Home
+    - TSMC_Daily_Report_Home
+    - AnnouncementsScreen
+    - Home_Page_Safety
+    - Incident_Report_Generator
+    - Error Page
+    - Directory_Home
+    - FeedbackScreen
+    - Home_Page_Admin
+    - Home_Page_Timesheets
+    - Timesheets_Review
+    - Home_Page_PM
+    - Timesheet_Approval_Queue
+    - Approved_Changes_Report

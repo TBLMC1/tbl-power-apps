@@ -1,0 +1,409 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  Home_Page_Foreman:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =// Load employee clock status cache once per session (cold start)
+        If(
+            IsEmpty(colEmployeeClockStatus),
+            LoadData(colEmployeeClockStatus, "cachedClockStatus", true)
+        );
+
+        // Auto-sync any pending scans
+        If(
+            Connection.Connected && !IsEmpty(colSignIns),
+
+            // Step 1 - Process Clock Ins first
+            ForAll(
+                Filter(colSignIns, Action = "Clock In" && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                Patch(
+                    'Daily Logins',
+                    Defaults('Daily Logins'),
+                    {
+                        Title: Text(item.ScanTime, "MM/dd/yyyy HH:mm:ss") & " - " & item.EmployeeName,
+                        EmployeeName: item.EmployeeName,
+                        QBTUserID: item.QBTUserID,
+                        WorkDate: Date(Year(item.ScanTime), Month(item.ScanTime), Day(item.ScanTime)),
+                        Day: {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Value: Text(item.ScanTime, "dddd")
+                        },
+                        TimeIn: DateAdd(
+                            DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                            Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                            TimeUnit.Minutes
+                        ),
+                        Customer: Text(item.Customer),
+                        Class: {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Value: Text(item.Class)
+                        },
+                        Notes: Coalesce(item.Notes, ""),
+                        Location: item.Location
+                    }
+                )
+            );
+
+            // Step 2 - Force SharePoint refresh before processing Clock Outs
+            ClearCollect(
+                colDailyLoginsRefresh,
+                Filter('Daily Logins', WorkDate = Today())
+            );
+
+            // Step 3 - Process Clock Outs using refreshed data
+            ForAll(
+                Filter(colSignIns, Action = "Clock Out" && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                With(
+                    {
+                        rec: LookUp(
+                            colDailyLoginsRefresh,
+                            EmployeeName = item.EmployeeName &&
+                            WorkDate = Date(Year(item.ScanTime), Month(item.ScanTime), Day(item.ScanTime)) &&
+                            IsBlank(TimeOut)
+                        )
+                    },
+                    If(
+                        !IsBlank(rec),
+                        Patch(
+                            'Daily Logins',
+                            LookUp('Daily Logins', ID = rec.ID),
+                            {
+                                TimeOut: DateAdd(
+                                    DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                                    Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                                    TimeUnit.Minutes
+                                ),
+                                Hours: Round(
+                                    (DateAdd(
+                                        DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                                        Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                                        TimeUnit.Minutes
+                                    ) - rec.TimeIn) * 24,
+                                    2
+                                ),
+                                Class: {
+                                    '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                    Value: Text(item.Class)
+                                },
+                                Customer: Text(item.Customer),
+                                ClockOutNotes: Coalesce(item.Notes, ""),
+                                QBTVerifiedStatus: {
+                                    '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                    Value: ""
+                                }
+                            }
+                        ),
+                        Notify("Clock-out not matched for " & item.EmployeeName & " - check Daily Logins", NotificationType.Error)
+                    )
+                )
+            );
+
+            // Step 4 - Refresh again for subsequent Clock Ins in same batch
+            ClearCollect(
+                colDailyLoginsRefresh,
+                Filter('Daily Logins', WorkDate = Today())
+            );
+
+            // Step 5 - Update employee clock status cache from what we just synced (avoids SharePoint read lag)
+            ForAll(
+                Filter(colSignIns, Action = "Clock In" && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                If(
+                    !IsEmpty(Filter(colEmployeeClockStatus, QBTUserID = item.QBTUserID)),
+                    Patch(
+                        colEmployeeClockStatus,
+                        LookUp(colEmployeeClockStatus, QBTUserID = item.QBTUserID),
+                        {IsClockedIn: true}
+                    ),
+                    Collect(colEmployeeClockStatus, {
+                        QBTUserID: item.QBTUserID,
+                        EmployeeName: item.EmployeeName,
+                        IsClockedIn: true
+                    })
+                )
+            );
+
+            ForAll(
+                Filter(colSignIns, Action = "Clock Out" && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                If(
+                    !IsEmpty(Filter(colEmployeeClockStatus, QBTUserID = item.QBTUserID)),
+                    Patch(
+                        colEmployeeClockStatus,
+                        LookUp(colEmployeeClockStatus, QBTUserID = item.QBTUserID),
+                        {IsClockedIn: false}
+                    ),
+                    Collect(colEmployeeClockStatus, {
+                        QBTUserID: item.QBTUserID,
+                        EmployeeName: item.EmployeeName,
+                        IsClockedIn: false
+                    })
+                )
+            );
+
+            SaveData(colEmployeeClockStatus, "cachedClockStatus");
+
+            Clear(colSignIns);
+            SaveData(colSignIns, "cachedSignIns");
+            Notify("Pending scans synced!", NotificationType.Success)
+        );
+
+        // Location and weather
+        Set(
+            varLocationCoords,
+            Text(Location.Latitude) & "," & Text(Location.Longitude)
+        );
+
+        If(
+            !IsBlank(varLocationCoords) && varLocationCoords <> ",",
+            Set(varWeatherResult, GetWeather.Run(varLocationCoords)),
+            Notify("Waiting for location...", NotificationType.Warning)
+        );
+
+        Set(
+            varTemperature,
+            Text(varWeatherResult.temperature, "0") & "°F"
+        );
+
+        Set(varLocation, varWeatherResult.cityname)
+    Children:
+      - Logo Back Home:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(208, 81, 5, 1)
+            Height: =161
+            Width: =640
+      - Company Logo Home:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =144
+            Image: ='TBL Logo'
+            Width: =640
+            Y: =8
+      - Welcome Name:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.Verdana
+            FontWeight: =FontWeight.Bold
+            Height: =138
+            Text: ="Welcome " & varUser.Personnel.DisplayName & ", you are currently at " & varLocation & " and the weather is " & varTemperature
+            X: =40
+            Y: =182
+      - Employee Sign In Button:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |+
+              =Navigate(
+                  'SelectProjectScreen',
+                  ScreenTransition.Fade
+              )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Sign In Employees"
+            X: =20
+            Y: =355
+      - Directory_Nav_HP_Foremen:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(Directory_Home)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: |-
+              ="Directory
+              "
+            X: =320
+            Y: =355
+      - Employee Sign In Button_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |
+              =Navigate(
+                  'Daily_Report_Home',
+                  ScreenTransition.Fade
+              )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Daily Report"
+            X: =20
+            Y: =475
+      - Button1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |+
+              =Navigate('Login Landing Page')
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Sign Out"
+            X: =180
+            Y: =1027
+      - Rectangle7:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(168, 0, 0, 1)
+            Fill: =RGBA(151, 0, 0, 1)
+            Height: =47
+            Visible: |-
+              =!IsEmpty(
+                  Filter(
+                      colAnnouncements,
+                      Priority.Value = "Urgent",
+                      !(ID in colDismissedAnnouncements.ID),
+                      "All" in TargetRole.Value || varUser.Authorization.Value in TargetRole.Value
+                  )
+              )
+            Width: =640
+            Y: =161
+      - Label15:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =47
+            Text: |-
+              ="⚠ " & LookUp(
+                  Filter(
+                      colAnnouncements,
+                      Priority.Value = "Urgent",
+                      !(ID in colDismissedAnnouncements.ID)
+                  ),
+                  true,
+                  Title
+              )
+            Visible: |-
+              =!IsEmpty(
+                  Filter(
+                      colAnnouncements,
+                      Priority.Value = "Urgent",
+                      !(ID in colDismissedAnnouncements.ID),
+                      "All" in TargetRole.Value || varUser.Authorization.Value in TargetRole.Value
+                  )
+              )
+            Width: =640
+            Y: =161
+      - Icon5:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(0, 18, 107, 1)
+            Height: =47
+            Icon: =Icon.NextArrow
+            OnSelect: =Navigate(AnnouncementsScreen)
+            Visible: |-
+              =!IsEmpty(
+                  Filter(
+                      colAnnouncements,
+                      Priority.Value = "Urgent",
+                      !(ID in colDismissedAnnouncements.ID),
+                      "All" in TargetRole.Value || varUser.Authorization.Value in TargetRole.Value
+                  )
+              )
+            Width: =55
+            X: =584
+            Y: =161
+      - Button5:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(AnnouncementsScreen)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Announcements"
+            X: =320
+            Y: =475
+      - Button15:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(FeedbackScreen)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Report Bug / Feedback"
+            X: =20
+            Y: =592
+      - Button16:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =96
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(Home_Page_Timesheets)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Review Timesheets"
+            X: =320
+            Y: =592

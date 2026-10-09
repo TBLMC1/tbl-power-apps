@@ -1,0 +1,442 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  ReviewScreen:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+    Children:
+      - Label6:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: ="Review & Submit"
+            X: =40
+            Y: =23
+      - Label7:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: =varSelectedCustomer & " - " & varSelectedClass
+            X: =40
+            Y: =141
+      - Label8:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Text: =CountRows(colSignIns) & " employees scanned"
+            X: =40
+            Y: =240
+      - galReview:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =417
+            Items: =Filter(colSignIns, SessionID = varCurrentSessionID)
+            TemplateSize: =213
+            Y: =381
+          Children:
+            - Image3:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Height: =72
+                  OnSelect: =Select(Parent)
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                  Width: =72
+                  X: =16
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Title2:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =38
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.QRValue
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =562
+                  X: =16
+                  Y: =16
+            - Subtitle2:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =33
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =Text(ThisItem.ScanTime, "hh:mm AM/PM")
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title2.Width
+                  X: =Title2.X
+                  Y: =54
+            - NextArrow2:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  AccessibleLabel: =Self.Tooltip
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(166, 166, 166, 1)
+                  DisabledBorderColor: =RGBA(56, 56, 56, 1)
+                  DisabledColor: =RGBA(119, 119, 119, 1)
+                  Height: =50
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  Tooltip: ="View item details"
+                  Width: =50
+                  X: =Parent.TemplateWidth - Self.Width - 12
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Separator2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle3:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.TemplateHeight - Separator2.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+            - Icon2:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(0, 18, 107, 1)
+                  Height: =33
+                  Icon: =Icon.Trash
+                  OnSelect: =Remove(colSignIns, ThisItem)
+                  Width: =42
+                  X: =598
+                  Y: =35
+            - txtNotes:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Default: =ThisItem.Notes
+                  Font: =Font.'Open Sans'
+                  Height: |+
+                    =50
+                  HintText: ="Enter notes..."
+                  HoverBorderColor: =RGBA(0, 18, 107, 1)
+                  HoverFill: =RGBA(186, 202, 226, 1)
+                  OnChange: |-
+                    =Patch(colSignIns, ThisItem, {Notes: txtNotes.Text})
+                  OnSelect: =Select(Parent)
+                  Visible: =!chkApplyAllNotes.Value
+                  Width: =232
+                  X: =88
+                  Y: =148
+            - Label4:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: |-
+                    =If(
+                        ThisItem.OfflineScan,
+                        RGBA(128, 128, 128, 1),
+                        If(
+                            ThisItem.Action = "Clock In",
+                            RGBA(54, 176, 75, 1),
+                            RGBA(196, 43, 28, 1)
+                        )
+                    )
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Bold
+                  OnSelect: =Select(Parent)
+                  Text: |-
+                    =If(
+                        ThisItem.OfflineScan,
+                        "N/A",
+                        ThisItem.Action
+                    )
+                  Width: =290
+                  X: =338
+                  Y: =138
+      - Button13:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |-
+              =// Validation - check required fields
+              If(
+                  IsBlank(varSelectedCustomer) || varSelectedCustomer = "",
+                  Notify("Please select a Customer/Project before submitting.", NotificationType.Error);
+                  false,
+                  IsBlank(varSelectedClass) || varSelectedClass = "",
+                  Notify("Please select a Class before submitting.", NotificationType.Error);
+                  false,
+                  IsEmpty(Filter(colSignIns, SessionID = varCurrentSessionID)),
+                  Notify("No employees scanned. Please scan at least one employee.", NotificationType.Error);
+                  false,
+                  !chkApplyAllNotes.Value &&
+                  CountRows(
+                      Filter(
+                          colSignIns,
+                          SessionID = varCurrentSessionID && IsBlank(Notes)
+                      )
+                  ) > 0,
+                  Notify("Please add Notes for all scanned employees before submitting.", NotificationType.Error);
+                  false,
+                  chkApplyAllNotes.Value && IsBlank(txtMasterNote.Text),
+                  Notify("Please enter a note to apply to all employees.", NotificationType.Error);
+                  false,
+                  true
+              );
+
+              If(
+                  !(IsBlank(varSelectedCustomer) || varSelectedCustomer = "") &&
+                  !(IsBlank(varSelectedClass) || varSelectedClass = "") &&
+                  !IsEmpty(Filter(colSignIns, SessionID = varCurrentSessionID)) &&
+                  !(
+                      !chkApplyAllNotes.Value &&
+                      CountRows(Filter(colSignIns, SessionID = varCurrentSessionID && IsBlank(Notes))) > 0
+                  ) &&
+                  !(chkApplyAllNotes.Value && IsBlank(txtMasterNote.Text)),
+
+                  // Apply master note to all scans if checkbox is checked
+                  If(
+                      chkApplyAllNotes.Value,
+                      ForAll(
+                          Filter(colSignIns, SessionID = varCurrentSessionID) As scan,
+                          Patch(
+                              colSignIns,
+                              scan,
+                              {Notes: txtMasterNote.Text}
+                          )
+                      )
+                  );
+
+                  // === PASSED VALIDATION - PROCEED ===
+                  If(
+                      !IsEmpty(Filter(colSignIns, SessionID = varCurrentSessionID && (IsBlank(Customer) || IsBlank(Class)))),
+                      Notify(
+                          "Some scans are missing a Customer or Class and were NOT submitted. Please select a Customer/Class and resubmit them before leaving.",
+                          NotificationType.Warning
+                      )
+                  );
+
+                  If(
+                      Connection.Connected,
+
+                      // Step 1 - Process Clock Ins first
+                      ForAll(
+                          Filter(colSignIns, Action = "Clock In" && SessionID = varCurrentSessionID && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                          If(
+                              IsBlank(
+                                  LookUp(
+                                      Filter('Daily Logins',
+                                          EmployeeName = item.EmployeeName &&
+                                          WorkDate = Date(Year(item.ScanTime), Month(item.ScanTime), Day(item.ScanTime))
+                                      ),
+                                      IsBlank(TimeOut)
+                                  )
+                              ),
+                              Patch(
+                                  'Daily Logins',
+                                  Defaults('Daily Logins'),
+                                  {
+                                      Title: Text(item.ScanTime, "MM/dd/yyyy HH:mm:ss") & " - " & item.EmployeeName,
+                                      EmployeeName: item.EmployeeName,
+                                      QBTUserID: item.QBTUserID,
+                                      WorkDate: Date(Year(item.ScanTime), Month(item.ScanTime), Day(item.ScanTime)),
+                                      Day: {
+                                          '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                          Value: Text(item.ScanTime, "dddd")
+                                      },
+                                      TimeIn: DateAdd(
+                                          DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                                          Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                                          TimeUnit.Minutes
+                                      ),
+                                      Customer: item.Customer,
+                                      Class: {
+                                          '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                          Value: item.Class
+                                      },
+                                      Notes: item.Notes,
+                                      Location: item.Location
+                                  }
+                              )
+                          )
+                      );
+
+                      // Step 2 - Refresh SharePoint before Clock Outs
+                      ClearCollect(
+                          colDailyLoginsRefresh,
+                          Filter('Daily Logins', WorkDate = Today())
+                      );
+
+                      // Step 3 - Process Clock Outs
+                      ForAll(
+                          Filter(colSignIns, Action = "Clock Out" && SessionID = varCurrentSessionID && !IsBlank(Customer) && !IsBlank(Class)) As item,
+                          With(
+                              {
+                                  rec: LookUp(
+                                      colDailyLoginsRefresh,
+                                      EmployeeName = item.EmployeeName &&
+                                      WorkDate = Date(Year(item.ScanTime), Month(item.ScanTime), Day(item.ScanTime)) &&
+                                      IsBlank(TimeOut)
+                                  )
+                              },
+                              If(
+                                  !IsBlank(rec),
+                                  Patch(
+                                      'Daily Logins',
+                                      LookUp('Daily Logins', ID = rec.ID),
+                                      {
+                                          TimeOut: DateAdd(
+                                              DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                                              Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                                              TimeUnit.Minutes
+                                          ),
+                                          Hours: Round(
+                                              (DateAdd(
+                                                  DateValue(Text(item.ScanTime, "mm/dd/yyyy")),
+                                                  Round(DateDiff(DateValue(Text(item.ScanTime, "mm/dd/yyyy")), item.ScanTime, TimeUnit.Minutes) / 15, 0) * 15,
+                                                  TimeUnit.Minutes
+                                              ) - rec.TimeIn) * 24,
+                                              2
+                                          ),
+                                          ClockOutNotes: item.Notes,
+                                          QBTVerifiedStatus: {
+                                              '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                              Value: ""
+                                          }
+                                      }
+                                  ),
+                                  Notify("Clock-out not matched for " & item.EmployeeName & " - check Daily Logins", NotificationType.Error)
+                              )
+                          )
+                      );
+
+                      // Step 4 - Remove only current session entries from colSignIns
+                      RemoveIf(colSignIns, SessionID = varCurrentSessionID);
+                      SaveData(colSignIns, "cachedSignIns");
+                      Notify("Submitted!", NotificationType.Success);
+                      Navigate(Home_Page_Foreman, ScreenTransition.Fade),
+
+                      // Offline - save everything and go home
+                      SaveData(colSignIns, "cachedSignIns");
+                      Notify("Saved offline. Will submit when connected.", NotificationType.Warning);
+                      Navigate(Home_Page_Foreman, ScreenTransition.Fade)
+                  )
+              )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Submit"
+            X: =360
+            Y: =1002
+      - Button14:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Navigate(ScanScreen, ScreenTransition.Fade)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Back"
+            Y: =1002
+      - Label10:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =31
+            Text: |-
+              =If(
+                  !Connection.Connected,
+                  "⚠️ You are not connected to the internet. Your clocking action will be determined when you return to this app with an internet connection.",
+                  ""
+              )
+            X: =40
+            Y: =310
+      - Label11:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =If(Connection.Connected, RGBA(54, 176, 75, 1), RGBA(196, 43, 28, 1))
+            Font: =Font.'Open Sans'
+            Text: |-
+              =If(Connection.Connected, "🟢 Online", "🔴 Offline")
+            X: =40
+            Y: =71
+      - chkApplyAllNotes:
+          Control: Classic/CheckBox@2.1.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            CheckboxBorderColor: =RGBA(0, 18, 107, 1)
+            CheckmarkFill: =RGBA(0, 0, 0, 1)
+            Font: =Font.'Open Sans'
+            Height: =71
+            HoverColor: =RGBA(0, 18, 107, 1)
+            Size: =14
+            Text: ="Apply note to all employees"
+            Width: =224
+            X: =416
+            Y: =310
+      - txtMasterNote:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: =
+            Font: =Font.'Open Sans'
+            Height: =177
+            HintText: ="Enter note for all employees"
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            Visible: =chkApplyAllNotes.Value
+            X: =40
+            Y: =798

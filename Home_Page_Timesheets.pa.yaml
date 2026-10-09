@@ -1,0 +1,307 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  Home_Page_Timesheets:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =Set(varToday, Today());
+        Set(varYesterday, Today() - 1);
+        Set(varCustomerLoading, false);
+
+        ClearCollect(
+            colHoursResults,
+            Filter(
+                AddColumns(
+                    Table({date: "", start: "", end: "", hours: 0, isUnpaidBreak: false}),
+                    EmployeeName, ""
+                ),
+                false
+            )
+        );
+
+        ClearCollect(
+            colSelectedTeam,
+            Filter(
+                'Insperity Employee Roster',
+                false
+            )
+        );
+
+        Set(varSearchMode, "Name");
+        ClearCollect(colCustomerFilteredUserIDs, Filter('Insperity Employee Roster', false))
+    Children:
+      - Rectangle5:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(208, 81, 5, 1)
+            Height: =175
+            Width: =640
+      - txtTeamSearch:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Default: =
+            Font: =Font.'Open Sans'
+            HintText: =If(varSearchMode = "Customer", "Search by customer...", "Search team members...")
+            HoverBorderColor: =RGBA(0, 18, 107, 1)
+            HoverFill: =RGBA(186, 202, 226, 1)
+            X: =24
+            Y: =94
+      - galTeamSelect:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =529
+            Items: |-
+              =If(
+                  varSearchMode = "Customer",
+                  If(
+                      IsBlank(txtTeamSearch.Text),
+                      AddColumns(Sort('JobCode Lookup', Title), QBTUserID, ""),
+                      AddColumns(Sort(Filter('JobCode Lookup', txtTeamSearch.Text in Title), Title), QBTUserID, "")
+                  ),
+                  If(
+                      IsBlank(txtTeamSearch.Text),
+                      AddColumns(
+                          Sort(
+                              Filter(
+                                  'Insperity Employee Roster',
+                                  QBTUserID <> "" &&
+                                  (CountRows(colCustomerFilteredUserIDs) = 0 || QBTUserID in colCustomerFilteredUserIDs.QBTUserID)
+                              ),
+                              Title
+                          ),
+                          JobCodeID, ""
+                      ),
+                      AddColumns(
+                          Sort(
+                              Filter(
+                                  'Insperity Employee Roster',
+                                  QBTUserID <> "" && txtTeamSearch.Text in Title &&
+                                  (CountRows(colCustomerFilteredUserIDs) = 0 || QBTUserID in colCustomerFilteredUserIDs.QBTUserID)
+                              ),
+                              Title
+                          ),
+                          JobCodeID, ""
+                      )
+                  )
+              )
+            Y: =322
+          Children:
+            - Separator3:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle8:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.TemplateHeight - Separator3.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+            - Label19:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =104
+                  OnSelect: =Select(Parent)
+                  Text: =ThisItem.Title
+                  Width: =535
+                  X: =4
+            - Checkbox1:
+                Control: Classic/CheckBox@2.1.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  CheckboxBorderColor: =RGBA(0, 18, 107, 1)
+                  CheckmarkFill: =RGBA(0, 0, 0, 1)
+                  Default: =!IsEmpty(Filter(colSelectedTeam, Title = ThisItem.Title))
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Lighter
+                  Height: =104
+                  HoverColor: =RGBA(0, 18, 107, 1)
+                  OnCheck: |-
+                    =If(
+                        varSearchMode = "Customer",
+                        Set(varSelectedJobcodeID, ThisItem.JobCodeID);
+                        Set(varSelectedCustomerName, ThisItem.Title);
+                        Set(varCustomerLoading, true),
+
+                        Collect(colSelectedTeam, ThisItem)
+                    )
+                  OnSelect: =Select(Parent)
+                  OnUncheck: =RemoveIf(colSelectedTeam, Title = ThisItem.Title)
+                  Text: =
+                  Width: =100
+                  X: =539
+      - Rectangle11:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderThickness: =5
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =135
+            Width: =640
+            Y: =852
+      - lblSelectedTeam:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =135
+            Text: |-
+              ="Selected: " & Concat(colSelectedTeam, Title & ", ")
+            Width: =640
+            Y: =852
+      - btnLoadHours:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |-
+              =ClearCollect(
+                  colHoursResults,
+                  Filter(
+                      AddColumns(
+                          Table({date: "", start: "", end: "", hours: 0, isUnpaidBreak: false}),
+                          EmployeeName, ""
+                      ),
+                      false
+                  )
+              );
+              ForAll(
+                  colSelectedTeam As emp,
+                  Collect(
+                      colHoursResults,
+                      AddColumns(
+                          GetQBTEmployeeHours.Run(
+                              emp.QBTUserID,
+                              Text(varYesterday, "yyyy-mm-dd"),
+                              Text(varToday, "yyyy-mm-dd")
+                          ),
+                          EmployeeName,
+                          emp.Title,
+                          QBTUserID,
+                          emp.QBTUserID
+                      )
+                  )
+              );
+              Navigate(Timesheets_Review, ScreenTransition.Fade)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="Load Hours"
+            X: =187
+            Y: =1016
+      - btnSearchByName:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =60
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: =Set(varSearchMode, "Name")
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="By Name"
+            Width: =231
+            X: =24
+            Y: =24
+      - Button12:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            Height: =60
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnSelect: |-
+              =Set(varSearchMode, "Customer");
+              Reset(txtTeamSearch)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="By Customer"
+            Width: =231
+            X: =274
+            Y: =24
+      - tmrCustomerFetch:
+          Control: Timer@2.1.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =ColorFade(Self.BorderColor, 70%)
+            DisabledColor: =ColorFade(Self.Fill, 90%)
+            DisabledFill: =ColorFade(Self.Fill, 70%)
+            Duration: =200
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnTimerEnd: |-
+              =If(
+                  varCustomerLoading,
+                  Set(varRawUserIdsJson, GetEmployeesByJobcode.Run(Text(varSelectedJobcodeID), Text(varYesterday, "yyyy-mm-dd")).useridsjson);
+                  ClearCollect(
+                      colCustomerFilteredUserIDs,
+                      ForAll(
+                          Split(
+                              Substitute(Substitute(Substitute(varRawUserIdsJson, "[", ""), "]", ""), """", ""),
+                              ","
+                          ),
+                          { QBTUserID: Trim(Value) }
+                      )
+                  );
+                  Set(varCustomerLoading, false);
+                  Set(varSearchMode, "Name");
+                  Reset(txtTeamSearch)
+              )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Start: =varCustomerLoading
+            Visible: =false
+            Y: =175
+      - Label24:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =109
+            Text: ="Loading employees for " & varSelectedCustomerName & "... Do NOT press anything while it loads!"
+            Visible: =varCustomerLoading
+            X: =40
+            Y: =194
