@@ -1,0 +1,21 @@
+# Packed app files (we track the unpacked source instead)
+*.msapp
+*.zip
+
+# Secrets: never commit these
+*.env
+secrets*
+*token*
+*apikey*
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+*.tmp
+.vscode/
+.idea/
+
+# Exported data (contains employee info)
+*.csv
